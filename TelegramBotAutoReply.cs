@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -8,24 +9,39 @@ namespace Weather_bot
 {
     internal class TelegramBotAutoReply
     {
+        public long clientId;
         public double lon;
-        public double lan;
-        public bool status=false;
+        public double lat;
+        public int utc;
         
+
+        public string city;
+        
+        public int statusChoiceCity = 0;
+        public bool statusChoiceTime = false;
+
         //текст кнопок начальных
+        private const string button0 = "Текущая погода";
         private const string button1 = "Выбрать/Поменять город";
         private const string button2 = "Прогноз на 2 дня";
         private const string button3 = "Прогноз на 7 дней";
         private const string button4 = "Уведомлять о погоде";
 
 
-        //города-топ4
+
+        //города-топ3
         private const string button5 = "Москва";
         private const string button6 = "Санкт-Петербург";
         private const string button7 = "Екатеринбург";
         private const string button8 = "Написать другой";
         private const string button9 = "Вернуться в меню";
         //текст кнопок
+
+        private const string button10 = "08.00";
+        private const string button11 = "12.00";
+        private const string button12 = "17.00";
+        private const string button13 = "Написать время";
+        private const string button14 = "Вернуться в начало";
 
         private string token { get; set; }
 
@@ -79,73 +95,153 @@ namespace Weather_bot
                     
                     var text = update.Message.Text; //получаем текст от клиента
                     
-                    if (status==true && text!= "/start" && text != "Вернуться в меню")
+                    if (statusChoiceCity == 1 && text!= "/start" && text != "Вернуться в меню")
                     {
-                        GeoData.DetectedCity(text, out lan, out lon);
-                        if (lan == 0)
+                        GeoData.DetectedCity(text, out lat, out lon, out utc);
+                        if (lat == 0)
                         {
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, "К сожалению мы не нашли такого города, попробуйте ввести снова или вернитесь к главному меню: /start!", replyMarkup: GetButtons3());
                         }
                         else
                         {
-                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город {text}, теперь выберите время", replyMarkup: GetButtons());
-                            status = false;
+                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город {text}\nТеперь вы можете подписаться на уведомления о погоде или посмотреть прогноз.", replyMarkup: GetButtons());
+                            statusChoiceCity = 2;
+                            //селект в таблицу 
+                            city = text; //город
+                            clientId = update.Message.Chat.Id; //айди клиента
+                            //ютс
+                            
                         }
                         break;
                     } 
 
+
+                    if (statusChoiceTime==true && text!= "/start" && text != "Вернуться в начало")
+                    {
+                        var alertTime = inputAlertTime();
+                        DateTime inputAlertTime()
+                        {
+                            
+                            if (DateTime.TryParseExact(text, "HH.mm", null, DateTimeStyles.None, out alertTime))
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Теперь вы будете получать уведомления в {text}.", replyMarkup: GetButtons());
+                                statusChoiceTime = false;
+                                ////селект в таблицу 
+                                //city - //город
+                                //clientId - //айди клиента
+                                //время отправки+ютс
+                                //лан лон
+                                DateTime alertTime = DateTime.ParseExact(text, "HH.mm", System.Globalization.CultureInfo.InvariantCulture);
+                                //SQLTable.InsertIntoTable("clientData", "chatId, city, time", $"{clientId}, '{city}', '{alertTime.AddHours(-utc + 3).ToShortTimeString()}'");
+                                SQLTable.InsertIntoTable($"INSERT INTO client_data (client_id, city, time) VALUES ({clientId}, '{city}', '{alertTime.AddHours(-utc + 3).ToShortTimeString()}') ON CONFLICT(client_id) DO UPDATE SET city =  '{city}', time = '{alertTime.AddHours(-utc + 3).ToShortTimeString()}';");
+
+
+
+                            }
+                            else
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Введите время в формате hh.mm (например, 15.42) или вернитесь к главному меню: /start!", replyMarkup: GetButtons5());
+                            }
+                            
+                            return alertTime; //16.01.2021 12:35:00
+                            
+                        }
+
+                        break;
+                    }
                     //обрабатываем текст
                     switch (text)
                     {
-                       
+                        case button0:
+                            if (statusChoiceCity == 2)
+                            {
+
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, Weather.ForecastCurrent(lat, lon, city), replyMarkup: GetButtons());
+                            }
+                            else
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Выберите сначала город", replyMarkup: GetButtons());
+                            }
+                            break;
+
                         case button1:
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Выберите кнопку: написать другой, если не видите город среди представленных!", replyMarkup: GetButtons2());
                             
-                            //switch (status)
-                            //{
-                            //    case true:
-                            //        ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Теперь выберите время, когда вам будут приходить уведомления", replyMarkup: GetButtons());
-                            //        break;
-                            //    case false:
-                            //        break;
-
-                            //}
                            
                             break;
                         case button2:
+                            if (statusChoiceCity == 2)
+                            {
+
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, Weather.ForecastTwoDays(lat, lon, city), replyMarkup: GetButtons());
+                            }
+                            else
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Выберите сначала город", replyMarkup: GetButtons());
+                            }
                             break;
                         case button3:
+                            if (statusChoiceCity == 2)
+                            {
+                                
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, Weather.ForecastWeek(lat, lon, city, DateTime.Now.AddHours(utc - 3)), replyMarkup: GetButtons());
+                            }
+                            else
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Выберите сначала город", replyMarkup: GetButtons());
+                            }
                             break;
                         case button4:
+                            if (statusChoiceCity == 2)
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Можете выбирать время", replyMarkup: GetButtons4());
+                            }
+                            else
+                            {
+                                ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Выберите сначала город", replyMarkup: GetButtons());
+                            }
                             break;
                         case button5:
                         case button6:
                         case button7:
-                            GeoData.DetectedCity(text, out lan, out lon);
-                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город {text}, теперь выберите время", replyMarkup: GetButtons());
+                            GeoData.DetectedCity(text, out lat, out lon, out utc);
+                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город {text}\nТеперь вы можете подписаться на уведомления о погоде или посмотреть прогноз.", replyMarkup: GetButtons());
+                            statusChoiceCity = 2;
+                            city = text; //селект будет в таблицу
+                            clientId = update.Message.Chat.Id;
+
                             break;
                         case button8:
-                            status = true;
+                            statusChoiceCity = 1;
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Напишите название города России", replyMarkup: GetButtons2());
                             break;
-                        
+
+                        case button10:
+                        case button11:
+                        case button12:
+                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Теперь вы будете получать уведомления в {text}.", replyMarkup: GetButtons());
+                            DateTime alertTime = DateTime.ParseExact(text, "HH.mm", System.Globalization.CultureInfo.InvariantCulture);
+                            SQLTable.InsertIntoTable($"INSERT INTO client_data (client_id, city, time) VALUES ({clientId}, '{city}', '{alertTime.AddHours(-utc + 3).ToShortTimeString()}') ON CONFLICT(client_id) DO UPDATE SET city =  '{city}', time = '{alertTime.AddHours(-utc + 3).ToShortTimeString()}';");
+
+                            break;
+                        case button13:
+                            statusChoiceTime = true;
+                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Введите время в формате hh.mm (например, 15.42)", replyMarkup: GetButtons5());
+                            break;
+                        case "/stop":
+                            ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Вы отписались от уведомлений о погоде!", replyMarkup: GetButtons());
+                            break;
+
                         default:
-                            status = false;
+                            statusChoiceCity = 0;
+                            statusChoiceTime = false;
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Вас приветствует чат-бот погоды в России!\nВы можете подписаться на уведомления, которые будут приходить в нужное вам время, или просто узнать прогноз на ближайшие 2 дня или неделю.\n" +
-                                "Для начала вам нужно выбрать город, если вы здесь впервые!", replyMarkup: GetButtons());
+                                "Для начала вам нужно выбрать город, если вы здесь впервые! Если вы не хотите больше получать уведомлений: /stop", replyMarkup: GetButtons());
                             
                             break;
                     }
 
-                    //if (update.Message.Voice != null)
-                    //{
-                    //    ourClient.SendTextMessageAsync(update.Message.Chat.Id, "К сожалению бот приболел и плохо слышит, напишите ему в чат!");
-                        
-                    //}
-                    //if(text!= null)
-                    //{
-                    //    //ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город - {text} для уведомлений о погоде!", replyMarkup:GetButtons());
-                    //}
+                   
 
                     break;
                 
@@ -156,6 +252,23 @@ namespace Weather_bot
         }
 
         
+
+       
+
+        private IReplyMarkup GetButtons()
+        {
+            return new ReplyKeyboardMarkup
+            {
+                Keyboard = new List<List<KeyboardButton>>
+                {
+                    new List<KeyboardButton> {new KeyboardButton { Text = button1 }, new KeyboardButton { Text = button2 } },
+                    new List<KeyboardButton> { new KeyboardButton { Text = button3 }, new KeyboardButton { Text = button4 } },
+                    new List<KeyboardButton> { new KeyboardButton { Text = button0 }
+
+                    }
+                }
+            };
+        }
 
         private IReplyMarkup GetButtons2()
         {
@@ -170,19 +283,6 @@ namespace Weather_bot
             };
         }
 
-        private IReplyMarkup GetButtons()
-        {
-            return new ReplyKeyboardMarkup
-            {
-                Keyboard = new List<List<KeyboardButton>>
-                {
-                    new List<KeyboardButton> {new KeyboardButton { Text = button1 }, new KeyboardButton { Text = button2 } },
-                    new List<KeyboardButton> { new KeyboardButton { Text = button3 }, new KeyboardButton { Text = button4 }
-                    }
-                }
-            };
-        }
-
         private IReplyMarkup GetButtons3()
         {
             return new ReplyKeyboardMarkup
@@ -191,6 +291,33 @@ namespace Weather_bot
                 {
                     new List<KeyboardButton> {new KeyboardButton { Text = button5 }, new KeyboardButton { Text = button6 } },
                     new List<KeyboardButton> { new KeyboardButton { Text = button7 }, new KeyboardButton { Text = button9 }
+                    }
+                }
+            };
+        }
+
+        private IReplyMarkup GetButtons4()
+        {
+            return new ReplyKeyboardMarkup
+            {
+                Keyboard = new List<List<KeyboardButton>>
+                {
+                    new List<KeyboardButton> {new KeyboardButton { Text = button10 }, new KeyboardButton { Text = button11 } },
+                    new List<KeyboardButton> { new KeyboardButton { Text = button12 }, new KeyboardButton { Text = button13 }
+                    }
+                }
+            };
+        }
+
+
+        private IReplyMarkup GetButtons5()
+        {
+            return new ReplyKeyboardMarkup
+            {
+                Keyboard = new List<List<KeyboardButton>>
+                {
+                    new List<KeyboardButton> {new KeyboardButton { Text = button10 }, new KeyboardButton { Text = button11 } },
+                    new List<KeyboardButton> { new KeyboardButton { Text = button12 }, new KeyboardButton { Text = button14 }
                     }
                 }
             };

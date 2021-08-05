@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -8,38 +9,37 @@ using System.Text;
 namespace Weather_bot
 {
     
-    public static class DataProcessing
+    public static class Weather
     {
         
-        public static void ProccessingCurrent(string api)
+        //public static void ProccessingCurrent(string api)
+        //{
+        //    string cityName = Console.ReadLine();
+        //    var urlСurrentWeather = $"http://api.openweathermap.org/data/2.5/weather?q={cityName}&&units=metric&lang=ru&appid={api}";
+        //    var urlForecastTwoDays = $"http://api.openweathermap.org/data/2.5/forecast/daily?q={cityName}&&units=metric&lang=ru&appid=b6ca72eadf23bc62d6855fc7d8e19d34";
+        //    //var key = "b6ca72eadf23bc62d6855fc7d8e19d34";
+        //    HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlСurrentWeather);
+        //    HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+        //    //надо считать данные с ответа
+
+        //    string response;
+        //    using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
+        //    {
+        //        response = streamReader.ReadToEnd();
+        //    }
+
+        //    WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
+        //    Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
+        //}
+        public static string ForecastCurrent(double lat, double lon, string city)
         {
-            string cityName = Console.ReadLine();
-            var urlСurrentWeather = $"http://api.openweathermap.org/data/2.5/weather?q={cityName}&&units=metric&lang=ru&appid={api}";
-            var urlForecastTwoDays = $"http://api.openweathermap.org/data/2.5/forecast/daily?q={cityName}&&units=metric&lang=ru&appid=b6ca72eadf23bc62d6855fc7d8e19d34";
-            //var key = "b6ca72eadf23bc62d6855fc7d8e19d34";
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlСurrentWeather);
-            HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //надо считать данные с ответа
+           
 
-            string response;
-            using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
-            {
-                response = streamReader.ReadToEnd();
-            }
-
-            WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
-            Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
-        }
-        public static void ProccessingForecastToday(string api)
-        {
-            string cityName = Console.ReadLine();
-
-            var urlForecastToday = $"http://api.openweathermap.org/data/2.5/forecast/hourly?q={cityName}&cnt=1&appid={api}";
+            var urlForecastToday = $"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&lang=ru&appid=76ac94e1bd857720b1cf1f3600228d81";
 
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastToday);
             HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //надо считать данные с ответа
-
+      
             string response;
             using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
             {
@@ -47,17 +47,15 @@ namespace Weather_bot
             }
 
             WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
-            Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
+            return $"Температура в городе {city}: {weatherInfo.Current.Temp}°C, скорость ветра: {weatherInfo.Current.Wind_speed} м/с, {weatherInfo.Current.Weather[0].Description}.";
         }
-        public static void ProccessingForecastTwoDays(string api)
+        public static string ForecastTwoDays(double lat, double lon, string city)
         {
-            string cityName = Console.ReadLine();
             
-            var urlForecastTwoDays = $"http://api.openweathermap.org/data/2.5/onecall?q={cityName}&exclude=hourly,daily&units=metric&lang=ru&&appid={api}";
-            
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastTwoDays);
+            var urlForecastToday = $"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,current,alerts&units=metric&lang=ru&appid=76ac94e1bd857720b1cf1f3600228d81";
+
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastToday);
             HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //надо считать данные с ответа
 
             string response;
             using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
@@ -65,27 +63,76 @@ namespace Weather_bot
                 response = streamReader.ReadToEnd();
             }
 
-            WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
-            Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
+            WeatherInfoTwoDays weatherInfo = JsonConvert.DeserializeObject<WeatherInfoTwoDays>(response);
+            return $"Сегодня в городе {city} температура днём: {weatherInfo.Daily[0].Temp.Day}°C, температура вечером: {weatherInfo.Daily[0].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[0].Wind_speed} м/с, {weatherInfo.Daily[0].Weather[0].Description}.\n" +
+                $"Завтра температура днём: {weatherInfo.Daily[1].Temp.Day}°C, температура вечером: {weatherInfo.Daily[0].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[1].Wind_speed} м/с, {weatherInfo.Daily[1].Weather[0].Description}.";
         }
-        public static void ProccessingForecastWeek(string api)
+
+        public static string ForecastWeek(double lat, double lon, string city, DateTime localTime)
         {
-            string cityName = Console.ReadLine();
 
-            var urlForecastWeek = $"http://api.openweathermap.org/data/2.5/forecast/daily?q={cityName}&cnt=7&appid={api}";
+            var urlForecastToday = $"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,current,alerts&units=metric&lang=ru&appid=76ac94e1bd857720b1cf1f3600228d81";
+
             
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastWeek);
+            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastToday);
             HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //надо считать данные с ответа
 
             string response;
             using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
             {
                 response = streamReader.ReadToEnd();
             }
+            //string dayOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.DayOfWeek);
+            //dayOfWeek = char.ToUpper(dayOfWeek[0]) + dayOfWeek[1..];
 
-            WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
-            Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
+            WeatherInfoTwoDays weatherInfo = JsonConvert.DeserializeObject<WeatherInfoTwoDays>(response);
+            return $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.DayOfWeek)[1..]}, в городе {city} температура днём: {weatherInfo.Daily[0].Temp.Day}°C, температура ночью: {weatherInfo.Daily[0].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[0].Wind_speed} м/с, {weatherInfo.Daily[0].Weather[0].Description}.\n" +
+                $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(1).DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(1).DayOfWeek)[1..]}, температура днём: {weatherInfo.Daily[1].Temp.Day}°C, температура ночью: {weatherInfo.Daily[1].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[1].Wind_speed} м/с, {weatherInfo.Daily[1].Weather[0].Description}.\n" +
+                $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(2).DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(2).DayOfWeek)[1..]}, температура днём: {weatherInfo.Daily[2].Temp.Day}°C, температура ночью: {weatherInfo.Daily[2].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[2].Wind_speed} м/с, {weatherInfo.Daily[2].Weather[0].Description}.\n" +
+                $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(3).DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(3).DayOfWeek)[1..]}, температура днём: {weatherInfo.Daily[3].Temp.Day}°C, температура ночью: {weatherInfo.Daily[3].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[3].Wind_speed} м/с, {weatherInfo.Daily[3].Weather[0].Description}.\n" +
+                $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(4).DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(4).DayOfWeek)[1..]}, температура днём: {weatherInfo.Daily[4].Temp.Day}°C, температура ночью: {weatherInfo.Daily[4].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[4].Wind_speed} м/с, {weatherInfo.Daily[4].Weather[0].Description}.\n" +
+                $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(5).DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(5).DayOfWeek)[1..]}, температура днём: {weatherInfo.Daily[5].Temp.Day}°C, температура ночью: {weatherInfo.Daily[5].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[5].Wind_speed} м/с, {weatherInfo.Daily[5].Weather[0].Description}.\n" +
+                $"{char.ToUpper(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(6).DayOfWeek)[0]) + CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(localTime.AddDays(6).DayOfWeek)[1..]}, температура днём: {weatherInfo.Daily[6].Temp.Day}°C, температура ночью: {weatherInfo.Daily[6].Temp.Night}°C, скорость ветра: {weatherInfo.Daily[6].Wind_speed} м/с, {weatherInfo.Daily[6].Weather[0].Description}.";
+            
+
         }
+        //public static void ProccessingForecastTwoDays(string api)
+        //{
+        //    string cityName = Console.ReadLine();
+
+        //    var urlForecastTwoDays = $"http://api.openweathermap.org/data/2.5/onecall?q={cityName}&exclude=hourly,daily&units=metric&lang=ru&&appid={api}";
+
+        //    HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastTwoDays);
+        //    HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+        //    //надо считать данные с ответа
+
+        //    string response;
+        //    using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
+        //    {
+        //        response = streamReader.ReadToEnd();
+        //    }
+
+        //    WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
+        //    Console.WriteLine($"Температура в городе {weatherInfo.}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
+        //}
+        //public static void ProccessingForecastWeek(string api)
+        //{
+        //    string cityName = Console.ReadLine();
+
+        //    var urlForecastWeek = $"http://api.openweathermap.org/data/2.5/forecast/daily?q={cityName}&cnt=7&appid={api}";
+
+        //    HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastWeek);
+        //    HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+        //    //надо считать данные с ответа
+
+        //    string response;
+        //    using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
+        //    {
+        //        response = streamReader.ReadToEnd();
+        //    }
+
+        //    WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
+        //    Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
+        //}
     }
 }

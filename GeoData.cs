@@ -13,6 +13,7 @@ namespace Weather_bot
         public double Lat { get; set; } //широта
         public double Lon { get; set; } //долгота
 
+      
 
         public static GeoData ParseFideCsv(string line)
         {
@@ -27,19 +28,27 @@ namespace Weather_bot
 
             return parsed;
         }
-        public static void DetectedCity(string cityName, out double outputlat, out double outputlon)
+        public static void DetectedCity(string cityName, out double outputlat, out double outputlon, out int outputTimeZone)
         {
+            outputTimeZone = 0;
             outputlon = 0;
             outputlat = 0;
+            
 
-             var list6 = File.ReadAllLines("cities.csv", Encoding.GetEncoding(1251));
+            
             IEnumerable<GeoData> list = File.ReadAllLines("cities.csv", Encoding.GetEncoding(1251))
                                          .Skip(1)
                                          .Select(GeoData.ParseFideCsv);
             try
             {
-                outputlat = list.FirstOrDefault(city => city.CityName == cityName).Lat;
-                outputlon = list.FirstOrDefault(city => city.CityName == cityName).Lon;
+                var geo = list.FirstOrDefault(city => city.CityName == cityName);
+                outputlat = geo.Lat;
+                outputlon = geo.Lon;
+                outputTimeZone = geo.TimeZone;
+                //outputlat = list.FirstOrDefault(city => city.CityName == cityName).Lat;
+                //outputlon = list.FirstOrDefault(city => city.CityName == cityName).Lon;
+                //outputTimeZone = list.FirstOrDefault(city => city.CityName == cityName).TimeZone;
+
             }
             catch (Exception ex)
             {
