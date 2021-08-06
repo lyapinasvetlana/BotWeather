@@ -4,6 +4,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Threading;
 
 namespace Weather_bot
 {
@@ -39,26 +40,33 @@ namespace Weather_bot
 
             try
             {
+                int clientId = 0;
+                string city = null;
+                double lat = 0;
+                double lon = 0;
+                while (true)
+                {
+                    SQLTable.SQLReplyToAlert(out lat, out lon, out city, out clientId);
+                    Thread.Sleep(10000);
+                }
 
-                Console.WriteLine(Weather.ForecastWeek(33.6, 33.7, "Кекерово", DateTime.Now) ); 
+                //double lat;
+                //double lon;
+                //string city;
+                //SQLTable.SQLSelect("SELECT lat, lon, city FROM public.client_data WHERE client_id = 730132317;", out lat, out lon, out city);
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
+
+                //SQLTable.SQLCommand( $"CREATE TABLE IF NOT EXISTS  client_data (id SERIAL PRIMARY KEY, client_id INT UNIQUE, city VARCHAR(255), lat double precision, lon double precision, time TIME WITH TIME ZONE)");
                 
 
-                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-                Console.WriteLine(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(DateTime.Now.DayOfWeek)); 
-                //GeoData.DetectedCity("Каменск-Уральский", out double lan, out double lon);
-                //Console.WriteLine(lan);
-                //создаём таблицы в БД
-
-                //SQLTable.CreateTable("client_data", "id SERIAL PRIMARY KEY, client_id INT UNIQUE, city VARCHAR(255), time TIME WITH TIME ZONE");
                 //SQLTable.CreateTable("city_data", "id SERIAL PRIMARY KEY, city VARCHAR(255), lan REAL, lon REAL");
 
                 //SQLTable.InsertIntoTable("clientData", "chatId, city, time", "5656, 'krksf', '04:30'");
                 //SQLTable.InsertIntoTable($"INSERT INTO client_data (client_id, city, time) VALUES (1234, 'kek', '10:40') ON CONFLICT(client_id) DO UPDATE SET city =  'pek', time = '10:12';");
-                Weather.ForecastTwoDays(33, 94, "Кемерово"); 
-                string kek=Weather.ForecastCurrent(33,94, "Кемерово");
+                
 
-                //DataProcessing.ProccessingCurrent("b6ca72eadf23bc62d6855fc7d8e19d34");
+                
 
                 TelegramBotAutoReply newreply = new TelegramBotAutoReply(token: "1494571167:AAFF0_riKPybc-uMirRBZtJEGSR8OM-BThE");
                 newreply.Updates();

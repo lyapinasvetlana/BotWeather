@@ -106,11 +106,13 @@ namespace Weather_bot
                         {
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город {text}\nТеперь вы можете подписаться на уведомления о погоде или посмотреть прогноз.", replyMarkup: GetButtons());
                             statusChoiceCity = 2;
-                            //селект в таблицу 
-                            city = text; //город
-                            clientId = update.Message.Chat.Id; //айди клиента
-                            //ютс
+                             
+                            city = text; 
+                            clientId = update.Message.Chat.Id;
+
+                            SQLTable.SQLCommand($"INSERT INTO client_data (client_id, city, lat, lon) VALUES ({update.Message.Chat.Id}, '{city}', {lat.ToString(CultureInfo.InvariantCulture)}, {lon.ToString(CultureInfo.InvariantCulture)}) ON CONFLICT(client_id) DO UPDATE SET city =  '{city}', lat = {lat.ToString(CultureInfo.InvariantCulture)}, lon = {lon.ToString(CultureInfo.InvariantCulture)};");
                             
+
                         }
                         break;
                     } 
@@ -126,15 +128,10 @@ namespace Weather_bot
                             {
                                 ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Теперь вы будете получать уведомления в {text}.", replyMarkup: GetButtons());
                                 statusChoiceTime = false;
-                                ////селект в таблицу 
-                                //city - //город
-                                //clientId - //айди клиента
-                                //время отправки+ютс
-                                //лан лон
                                 DateTime alertTime = DateTime.ParseExact(text, "HH.mm", System.Globalization.CultureInfo.InvariantCulture);
                                 //SQLTable.InsertIntoTable("clientData", "chatId, city, time", $"{clientId}, '{city}', '{alertTime.AddHours(-utc + 3).ToShortTimeString()}'");
-                                SQLTable.InsertIntoTable($"INSERT INTO client_data (client_id, city, time) VALUES ({clientId}, '{city}', '{alertTime.AddHours(-utc + 3).ToShortTimeString()}') ON CONFLICT(client_id) DO UPDATE SET city =  '{city}', time = '{alertTime.AddHours(-utc + 3).ToShortTimeString()}';");
 
+                                SQLTable.SQLCommand($"UPDATE client_data SET time = '{alertTime.AddHours(-utc + 3).ToShortTimeString()}' WHERE client_id = {update.Message.Chat.Id};");
 
 
                             }
@@ -155,7 +152,7 @@ namespace Weather_bot
                         case button0:
                             if (statusChoiceCity == 2)
                             {
-
+                                SQLTable.SQLSelect($"SELECT lat, lon, city FROM public.client_data WHERE client_id = {update.Message.Chat.Id};", out lat, out lon, out city);
                                 ourClient.SendTextMessageAsync(update.Message.Chat.Id, Weather.ForecastCurrent(lat, lon, city), replyMarkup: GetButtons());
                             }
                             else
@@ -172,7 +169,7 @@ namespace Weather_bot
                         case button2:
                             if (statusChoiceCity == 2)
                             {
-
+                                SQLTable.SQLSelect($"SELECT lat, lon, city FROM public.client_data WHERE client_id = {update.Message.Chat.Id};", out lat, out lon, out city);
                                 ourClient.SendTextMessageAsync(update.Message.Chat.Id, Weather.ForecastTwoDays(lat, lon, city), replyMarkup: GetButtons());
                             }
                             else
@@ -183,7 +180,7 @@ namespace Weather_bot
                         case button3:
                             if (statusChoiceCity == 2)
                             {
-                                
+                                SQLTable.SQLSelect($"SELECT lat, lon, city FROM public.client_data WHERE client_id = {update.Message.Chat.Id};", out lat, out lon, out city);
                                 ourClient.SendTextMessageAsync(update.Message.Chat.Id, Weather.ForecastWeek(lat, lon, city, DateTime.Now.AddHours(utc - 3)), replyMarkup: GetButtons());
                             }
                             else
@@ -207,10 +204,11 @@ namespace Weather_bot
                             GeoData.DetectedCity(text, out lat, out lon, out utc);
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Вы выбрали город {text}\nТеперь вы можете подписаться на уведомления о погоде или посмотреть прогноз.", replyMarkup: GetButtons());
                             statusChoiceCity = 2;
-                            city = text; //селект будет в таблицу
+                            city = text;
                             clientId = update.Message.Chat.Id;
-
+                            SQLTable.SQLCommand($"INSERT INTO client_data (client_id, city, lat, lon) VALUES ({update.Message.Chat.Id}, '{city}', {lat.ToString(CultureInfo.InvariantCulture)}, {lon.ToString(CultureInfo.InvariantCulture)}) ON CONFLICT(client_id) DO UPDATE SET city =  '{city}', lat = {lat.ToString(CultureInfo.InvariantCulture)}, lon = {lon.ToString(CultureInfo.InvariantCulture)};");
                             break;
+
                         case button8:
                             statusChoiceCity = 1;
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Напишите название города России", replyMarkup: GetButtons2());
@@ -221,8 +219,7 @@ namespace Weather_bot
                         case button12:
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, $"Теперь вы будете получать уведомления в {text}.", replyMarkup: GetButtons());
                             DateTime alertTime = DateTime.ParseExact(text, "HH.mm", System.Globalization.CultureInfo.InvariantCulture);
-                            SQLTable.InsertIntoTable($"INSERT INTO client_data (client_id, city, time) VALUES ({clientId}, '{city}', '{alertTime.AddHours(-utc + 3).ToShortTimeString()}') ON CONFLICT(client_id) DO UPDATE SET city =  '{city}', time = '{alertTime.AddHours(-utc + 3).ToShortTimeString()}';");
-
+                            SQLTable.SQLCommand($"UPDATE client_data SET time = '{alertTime.AddHours(-utc + 3).ToShortTimeString()}' WHERE client_id = {update.Message.Chat.Id};");
                             break;
                         case button13:
                             statusChoiceTime = true;
