@@ -230,8 +230,6 @@ namespace Weather_bot
                             break;
 
                         default:
-                            statusChoiceCity = 0;
-                            statusChoiceTime = false;
                             ourClient.SendTextMessageAsync(update.Message.Chat.Id, "Вас приветствует чат-бот погоды в России!\nВы можете подписаться на уведомления, которые будут приходить в нужное вам время, или просто узнать прогноз на ближайшие 2 дня или неделю.\n" +
                                 "Для начала вам нужно выбрать город, если вы здесь впервые! Если вы не хотите больше получать уведомлений: /stop", replyMarkup: GetButtons());
                             
