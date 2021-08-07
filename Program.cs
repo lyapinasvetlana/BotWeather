@@ -40,13 +40,10 @@ namespace Weather_bot
 
             try
             {
-                int clientId = 0;
-                string city = null;
-                double lat = 0;
-                double lon = 0;
+                
                 while (true)
                 {
-                    SQLTable.SQLReplyToAlert(out lat, out lon, out city, out clientId);
+                    SQLTable.ReplyAlertAsync();
                     Thread.Sleep(10000);
                 }
 
