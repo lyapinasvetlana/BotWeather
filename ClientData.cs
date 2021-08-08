@@ -6,37 +6,14 @@ namespace Weather_bot
 {
     class ClientData
     {
-        public int ClientId { get; private set; }
-        
-        public ClientData(int clientId)
+        public long Id { get; private set; }
+        public int statusChoiceCity ;
+        public bool statusChoiceTime;
+        public ClientData(long clientId)
         {
-            ClientId = clientId;
+           Id = clientId;
         }
 
-        enum StatusChoiceCity
-        {
-            NoCityChosen,
-            WannaChoiceCity,
-            ChooseCity
-
-        }
-
-        enum StatusChoiceTimeAlert
-        {
-            NoTimingChosen,
-            ChooseTiming
-        }
     }
 
-    class Person
-    {
-        public string Name { get; set; }
-        public int Age { get; set; }
-
-        public Person(string name, int age)
-        {
-            Name = name;
-            Age = age;
-        }
-    }
 }

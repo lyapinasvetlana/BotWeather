@@ -8,12 +8,11 @@ namespace Weather_bot
 {
     public class GeoData
     {
+        //параметры выбранного города
         public string CityName { get; set; }
         public int TimeZone { get; set; }
-        public double Lat { get; set; } //широта
-        public double Lon { get; set; } //долгота
-
-      
+        public double Lat { get; set; } 
+        public double Lon { get; set; } 
 
         public static GeoData ParseFideCsv(string line)
         {
@@ -33,9 +32,7 @@ namespace Weather_bot
             outputTimeZone = 0;
             outputlon = 0;
             outputlat = 0;
-            
 
-            
             IEnumerable<GeoData> list = File.ReadAllLines("cities.csv", Encoding.GetEncoding(1251))
                                          .Skip(1)
                                          .Select(GeoData.ParseFideCsv);
@@ -45,23 +42,13 @@ namespace Weather_bot
                 outputlat = geo.Lat;
                 outputlon = geo.Lon;
                 outputTimeZone = geo.TimeZone;
-                //outputlat = list.FirstOrDefault(city => city.CityName == cityName).Lat;
-                //outputlon = list.FirstOrDefault(city => city.CityName == cityName).Lon;
-                //outputTimeZone = list.FirstOrDefault(city => city.CityName == cityName).TimeZone;
 
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine(ex);
             }
-            
-             
-            
-
         }
-        
-        
     }
     
 }

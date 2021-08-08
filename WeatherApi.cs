@@ -11,30 +11,9 @@ namespace Weather_bot
     
     public static class Weather
     {
-        
-        //public static void ProccessingCurrent(string api)
-        //{
-        //    string cityName = Console.ReadLine();
-        //    var urlСurrentWeather = $"http://api.openweathermap.org/data/2.5/weather?q={cityName}&&units=metric&lang=ru&appid={api}";
-        //    var urlForecastTwoDays = $"http://api.openweathermap.org/data/2.5/forecast/daily?q={cityName}&&units=metric&lang=ru&appid=b6ca72eadf23bc62d6855fc7d8e19d34";
-        //    //var key = "b6ca72eadf23bc62d6855fc7d8e19d34";
-        //    HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlСurrentWeather);
-        //    HttpWebResponse httpWebResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-        //    //надо считать данные с ответа
-
-        //    string response;
-        //    using (StreamReader streamReader = new StreamReader(httpWebResponse.GetResponseStream()))
-        //    {
-        //        response = streamReader.ReadToEnd();
-        //    }
-
-        //    WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
-        //    Console.WriteLine($"Температура в городе {weatherInfo.Name}: {weatherInfo.Main.Temp}°, скорость ветра: {weatherInfo.Wind.Speed} м/с, {weatherInfo.Weather[0].Description}");
-        //}
+      
         public static string ForecastCurrent(double lat, double lon, string city)
         {
-           
-
             var urlForecastToday = $"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely,hourly,daily,alerts&units=metric&lang=ru&appid=76ac94e1bd857720b1cf1f3600228d81";
 
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlForecastToday);
@@ -46,7 +25,7 @@ namespace Weather_bot
                 response = streamReader.ReadToEnd();
             }
 
-            WeatherInfo weatherInfo = JsonConvert.DeserializeObject<WeatherInfo>(response);
+            WeatherInfoDeserializer weatherInfo = JsonConvert.DeserializeObject<WeatherInfoDeserializer>(response);
             return $"Температура в городе {city}: {Math.Round(weatherInfo.Current.Temp)}°C, скорость ветра: {Math.Round(weatherInfo.Current.Wind_speed)} м/с, {weatherInfo.Current.Weather[0].Description}.";
         }
         public static string ForecastTwoDays(double lat, double lon, string city)

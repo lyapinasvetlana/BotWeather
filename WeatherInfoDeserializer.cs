@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Weather_bot
 {
-    public class WeatherInfo
+    public class WeatherInfoDeserializer
     {
        
         public CurrentInfo Current { get; set; }
