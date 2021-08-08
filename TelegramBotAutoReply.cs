@@ -8,6 +8,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace Weather_bot
 {
     internal class TelegramBotAutoReply
+
     {
         public long clientId;
         public double lon;
@@ -43,7 +44,7 @@ namespace Weather_bot
         private const string button13 = "Написать время";
         private const string button14 = "Вернуться в начало";
 
-        private string token { get; set; }
+        private readonly string token;
 
         Telegram.Bot.TelegramBotClient ourClient;
 
@@ -59,7 +60,6 @@ namespace Weather_bot
             var informationBot = ourClient.GetMeAsync().Result;
             if(informationBot!=null && !string.IsNullOrEmpty(informationBot.Username) )
             {
-                
                 int offset = 0;
                 while (true)
                 {
