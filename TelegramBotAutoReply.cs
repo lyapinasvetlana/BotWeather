@@ -188,6 +188,7 @@ namespace Weather_bot
                             ourClient.SendTextMessageAsync(user.Id, "Введите время в формате hh.mm (например, 15:42)", replyMarkup: GetButtons5());
                             break;
                         case "/stop":
+                            SQLTable.SQLCommand($"DELETE FROM client_data WHERE client_id = {user.Id};");
                             ourClient.SendTextMessageAsync(user.Id, "Вы отписались от уведомлений о погоде!", replyMarkup: GetButtons());
                             break;
 
